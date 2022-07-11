@@ -7,14 +7,28 @@ import havsfunc
 import jvsfunc
 import lvsfunc.dehalo
 import vapoursynth
+from vapoursynth import core
 import vsutil
 
-def detelecine(clip: vapoursynth.VideoNode) -> vapoursynth.VideoNode:  # Thanks to Varde for the telecine block.
-    clip = vsutil.depth(clip.vivtc.VFM(1), 16).nnedi3.nnedi3(1, nns=2, pscrn=1, combed_only=True)
-    clip = clip.vivtc.VDecimate()
-    clip = havsfunc.Vinverse(clip)
+def detelecine(clip: vapoursynth.VideoNode, decimate=True, inverse=True, nns=2) -> vapoursynth.VideoNode:  # Thanks to Varde for the telecine block.
+    clip = vsutil.depth(clip.vivtc.VFM(1), 16).nnedi3.nnedi3(1, nns=nns, pscrn=1, combed_only=True)
+    if decimate:
+        clip = clip.vivtc.VDecimate()
+    if inverse:
+        clip = havsfunc.Vinverse(clip)
     return clip
 
+def YUV420toRGB(clip):
+    clip = clip.fmtc.resample(css="444")
+    clip = clip.fmtc.matrix(mat="601", col_fam=vapoursynth.RGB)
+    clip = clip.fmtc.bitdepth(bits=8)
+    return clip
+
+def RGBtoYUV420(clip):
+    clip = clip.fmtc.matrix (mat="601", col_fam=vapoursynth.YUV, bits=16)
+    clip = clip.fmtc.matrix(mat="601", col_fam=vapoursynth.RGB)
+    clip = clip.fmtc.bitdepth(bits=8)
+    return clip
 
 def jvs_dehalo(in_clip):  # Done initally by Julek. Deals with main haloing.
     in_clip = vsutil.depth(in_clip, 16)

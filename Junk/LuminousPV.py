@@ -62,17 +62,15 @@ out_clip = vsutil.depth(out_clip, 10)
 # stgfunc.output()
 src.set_output(0)
 out_clip.set_output(1)
-
-
-from pathlib import Path
-import os
-from lvsfunc.render import find_scene_changes,SceneChangeMode
-out_path = Path(__file__).resolve()
-out_path = out_path.with_name(f"{out_path.stem}_qpfile").with_suffix(".txt")
-
-out_path.parent.mkdir(parents=True, exist_ok=True)
-#out_clip = run(src=True)[0]
-if os.path.isfile(out_path) is False:
-    with open(out_path, 'w') as o:
-        for f in find_scene_changes(src, mode=SceneChangeMode.WWXD_SCXVID_UNION):
-            o.write(f"{f} I -1\n")
+# from pathlib import Path
+# import os
+# from lvsfunc.render import find_scene_changes,SceneChangeMode
+# out_path = Path(__file__).resolve()
+# out_path = out_path.with_name(f"{out_path.stem}_qpfile").with_suffix(".txt")
+#
+# out_path.parent.mkdir(parents=True, exist_ok=True)
+# #out_clip = run(src=True)[0]
+# if os.path.isfile(out_path) is False:
+#     with open(out_path, 'w') as o:
+#         for f in find_scene_changes(src, mode=SceneChangeMode.WWXD_SCXVID_UNION):
+#             o.write(f"{f} I -1\n")
