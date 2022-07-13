@@ -10,10 +10,14 @@ import lvsfunc
 import stgfunc
 import vapoursynth
 import vardefunc.aa
+import shynonon
+import vsmask
 import vsutil
 from lvsfunc.aa import upscaled_sraa
 
 core = vapoursynth.core
+# opt: replace with vs mask
+witty = vsmask.edge.FDoGTCanny()
 fdog = vardefunc.mask.FDOG()
 
 a = str(pathlib.Path("raw/Luminous Witches - 02 (Amazon dAnime CBR 1080p).mkv").resolve())
@@ -22,15 +26,16 @@ b = str(pathlib.Path("raw/Luminous Witches - 02 (Amazon dAnime VBR 1080p).mkv").
 
 def jvs_dehalo(in_clip):  # Done initally by Julek. Deals with main haloing.
     #in_clip = vsutil.depth(in_clip, 16)
+    # opt: replace with vs-rgtools's gauss_blur
     aa = core.bilateral.Gaussian(in_clip, 0.5)
     i_aa = lvsfunc.aa.upscaled_sraa(aa, 1.1)
     mask = jvsfunc.dehalo_mask(i_aa, expand=1, iterations=0, brz=100)
+    # opt: replace with vs-dehalo's fine_dehalo
     dehalo = havsfunc.FineDehalo(in_clip, rx=2, darkstr=1, brightstr=1)
     part_a = core.std.MaskedMerge(in_clip, dehalo, mask)
     return part_a, mask, i_aa
 
 def deband(clip: vapoursynth.VideoNode):
-    # todo banding fixes. look at frame 12322 for why.
     clip_band = debandshit.dumb3kdb(clip, use_neo=True, threshold=28)
     mask = fdog.get_mask(clip)
     out_clip = core.std.MaskedMerge(clip_band, clip, mask)
@@ -39,6 +44,7 @@ def deband(clip: vapoursynth.VideoNode):
 
 
 def srcs():
+    # opt: stgfunc.src has the depth parameter as second input. use it.
     src = stgfunc.src(a)
     src_b = stgfunc.src(b)
     src = vsutil.depth(src, 16)
@@ -77,13 +83,14 @@ o_clip,den_m = denoise(src_avg)
 o_clip = chroma(src_avg,o_clip,den_m)
 o_clip = deband(o_clip)
 
-halo_mask = havsfunc.FineDehalo(o_clip, rx=0.5, darkstr=0.5, brightstr=0.5, contra=1, showmask=True)
+def aa(src_clip):
+    sc = shynonon.scale
+    halo_mask = witty.edgemask(vsutil.get_y(src_clip), sc(src_clip, 0.5))
+    sraa2 = core.eedi2cuda.AA2(src_clip)
+    aa2 = core.std.MaskedMerge(src_clip, sraa2, halo_mask)
+    return aa2
 
-
-
-sraa = upscaled_sraa(o_clip, rfactor=1.7)
-
-out_clip = core.std.MaskedMerge(sraa, o_clip, halo_mask)
+out_clip = aa(o_clip)
 dehalo, mask, i_aa = jvs_dehalo(out_clip)
 
 # m = src.std.MaskedMerge(den, l_mask, planes=1)
@@ -95,7 +102,8 @@ out_clip = vsutil.depth(out_clip, 10)
 
 #stgfunc.output(src_avg)
 out_clip = out_clip.fmtc.resample(css="420")
-out_clip.set_output(0)
+src_avg.set_output(0)
+out_clip.set_output(1)
 
 
 # Extra 02 tweaks lol

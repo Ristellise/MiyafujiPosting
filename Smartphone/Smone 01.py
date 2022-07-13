@@ -3,21 +3,24 @@ import pathlib
 import EoEfunc
 import awsmfunc
 import ccd
+import debandshit
+import fvsfunc
 import havsfunc
 import jvsfunc
+import kagefunc
 import lvsfunc
 import stgfunc
 import vapoursynth
 import vardefunc.aa
 import vsutil
-from lvsfunc.aa import nnedi3,based_aa
-from vsutil import get_w, get_y
+from lvsfunc.aa import nnedi3
+from vsutil import get_w
 
 core = vapoursynth.core
 fdog = vardefunc.mask.FDOG()
 
 a = str(pathlib.Path(
-    r"H:\Sanya Flies In The Night Sky [AnimeBytes]\[BDMV] In Another World with My Smartphone\異世界はスマートフォンとともに。 VOL1\ISESUMA_1\BDMV\STREAM\00001.m2ts").resolve())
+    r"raws/00001.m2ts").resolve())
 nnedi3 = nnedi3(opencl=True)
 
 
@@ -71,6 +74,16 @@ cm = pred[1] + op[1] + m[1] + ed[1]
 stgfunc.output(src)
 # stgfunc.output(desc)
 
+def compute_pairs(a, b, foff):
+    return f"[{a - foff} {b - foff}]"
+
+def deband(clip: vapoursynth.VideoNode):
+    # todo banding fixes. look at frame 12322 for why.
+    clip_band = debandshit.dumb3kdb(clip, use_neo=True, threshold=40)
+    mask = fdog.get_mask(clip)
+    out_clip = core.std.MaskedMerge(clip_band, clip, mask)
+    # clip = clip.text.Text("NoDeBand")
+    return out_clip
 
 def denoise(r_clip: vapoursynth.VideoNode, credit_mask: vapoursynth.VideoNode, *_):
     pred = r_clip[:3693]
@@ -78,8 +91,8 @@ def denoise(r_clip: vapoursynth.VideoNode, credit_mask: vapoursynth.VideoNode, *
     main = r_clip[3693 + 2157:3693 + 2157 + 26039]
     ed = r_clip[3693 + 2157 + 26039:]
 
-    pred = EoEfunc.denoise.BM3D(pred, sigma=[1.7, 0], CUDA=True)
-    main = EoEfunc.denoise.BM3D(main, sigma=[1.7, 0], CUDA=True)
+    pred = EoEfunc.denoise.BM3D(pred, sigma=[2, 0], CUDA=True)
+    main = EoEfunc.denoise.BM3D(main, sigma=[2, 0], CUDA=True)
     op = EoEfunc.denoise.BM3D(op, sigma=[2, 0], CUDA=True)
     ed = EoEfunc.denoise.BM3D(ed, sigma=[1.7, 0], CUDA=True)
 
@@ -93,25 +106,27 @@ def denoise(r_clip: vapoursynth.VideoNode, credit_mask: vapoursynth.VideoNode, *
 
 
 den, _ = denoise(desc, cm)
-stgfunc.output(den)
-den_lum = get_y(den)
-lum_aa = based_aa(den_lum, eedi3_kwargs=dict(gamma=80))
-ee = vardefunc.misc.merge_chroma(lum_aa, den)
+deb = fvsfunc.ReplaceFrames(den, deband(den), mappings=compute_pairs(15334, 15457, 0))
+stgfunc.output(deb)
+#dehalo = stgfunc.fine_dehalo(deb)
+#stgfunc.output(dehalo)
+#lum_aa = based_aa(den_lum, eedi3_kwargs=dict(gamma=80))
+#ee = vardefunc.misc.merge_chroma(lum_aa, den)
 # aa = vardefunc.aa.upscaled_sraa(den, singlerater=ee)
-stgfunc.output(ee)
+#stgfunc.output(ee)
 # awsmfunc.bbmod(src, 2, 2, 2, 2, blur=20)  # meh, good enough
 # stgfunc.output(src)
 # d_m = lvsfunc.mask.halo_mask(src)
 # lum = vsutil.get_y(src)
 # l_mask = lum.std.Sobel().std.Invert()
-# mask = fdog.get_mask(vsutil.get_y(src)).std.Invert().std.Inflate()
+mask = fdog.get_mask(vsutil.get_y(deb)).std.Invert().std.Inflate()
 # den = EoEfunc.denoise.BM3D(src, sigma=[2, 0], CUDA=True)
 #
 # preccd = core.std.MaskedMerge(src, den, mask)
 #
-# ccd_mask = fdog.get_mask(vsutil.get_y(preccd))
-# clip_ccd = ccd.ccd(preccd)  # Cleans up chroma
-# postccd = core.std.MaskedMerge(clip_ccd, preccd, mask)
+ccd_mask = fdog.get_mask(vsutil.get_y(deb))
+clip_ccd = ccd.ccd(deb)  # Cleans up chroma
+postccd = core.std.MaskedMerge(clip_ccd, deb, mask)
 # out_clip = postccd
 #
 # halo_mask = havsfunc.FineDehalo(out_clip, rx=0.5, darkstr=0.5, brightstr=0.5, contra=1, showmask=True)
@@ -127,9 +142,9 @@ stgfunc.output(ee)
 # # m = kagefunc.hybriddenoise(src, 0.1, 1.5)  #
 # # stgfunc.output(src)
 #
-# out_clip = kagefunc.adaptive_grain(out_clip, strength=0.3, )
+out_clip = kagefunc.adaptive_grain(postccd, strength=0.3)
 # out_clip = vsutil.depth(out_clip, 10)
-# # stgfunc.output()
+stgfunc.output(out_clip)
 # src.set_output(0)
 # out_clip.set_output(1)
 # from pathlib import Path

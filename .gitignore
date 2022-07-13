@@ -1,1 +1,16 @@
 *.m2ts
+*.lwi
+vs-preview
+/Smartphone/.vspreview/
+*.jpg
+*.png
+*.mkv
+*.264
+/World Witches/raw
+/World Witches/.vspreview
+/World Witches/__pycache__
+/World Witches/*.qp
+/.idea
+/Junk/WitchFunc/__pycache__/*.pyc
+/Utils/*.pth
+/Junk/.vspreview
