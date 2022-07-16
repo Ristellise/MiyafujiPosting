@@ -50,7 +50,7 @@ def denoise(src_clip):
     mask_2 = witty.edgemask(vsutil.get_y(src_clip), lthr=sc(src_clip, .8),
                             hthr=sc(src_clip, .9)).std.Deflate().std.Deflate().std.Deflate().std.Deflate().std.Invert()
 
-    den = EoEfunc.denoise.BM3D(src_clip, sigma=[3, 0], CUDA=True)
+    den = EoEfunc.denoise.BM3D(src_clip, sigma=[3.5, 0], CUDA=True)
     src_den = core.std.MaskedMerge(src_clip, den, mask_2)
     return src_den, mask_2
 

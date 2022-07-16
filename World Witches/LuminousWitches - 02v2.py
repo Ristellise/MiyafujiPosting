@@ -49,7 +49,7 @@ def denoise(src_clip):
     mask_2 = witty.edgemask(vsutil.get_y(src_clip), lthr=sc(src_clip, .8),
                             hthr=sc(src_clip, .9)).std.Deflate().std.Deflate().std.Deflate().std.Deflate().std.Invert()
 
-    den = EoEfunc.denoise.BM3D(src_clip, sigma=[3, 0], CUDA=True)
+    den = EoEfunc.denoise.BM3D(src_clip, sigma=[3.5, 0], CUDA=True)
     src_den = core.std.MaskedMerge(src_clip, den, mask_2)
     return src_den, mask_2
 
@@ -79,14 +79,14 @@ def aa(src_clip):
 
 
 src_fmerg = srcs()
-stgfunc.output(src_fmerg)
+# stgfunc.output(src_fmerg)
 # stgfunc.output(src_avg)
 denoised, den_m = denoise(src_fmerg)
 chroma_den = chroma(denoised)
 # stgfunc.output(den_m)
-stgfunc.output(chroma_den)
+#stgfunc.output(chroma_den)
 debanded = deband(chroma_den)
-stgfunc.output(debanded)
+#stgfunc.output(debanded)
 aa_clip = aa(debanded)
 dehalo = jvs_dehalo(aa_clip)
 
