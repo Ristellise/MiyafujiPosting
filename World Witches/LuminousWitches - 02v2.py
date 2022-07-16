@@ -31,7 +31,6 @@ def jvs_dehalo(in_clip):  # Done initally by Julek. Deals with main haloing.
 
 
 def deband(clip: vapoursynth.VideoNode):
-    # todo banding fixes. look at frame 12322 for why.
     clip_band = debandshit.dumb3kdb(clip, use_neo=True, threshold=38)
     mask = witty.edgemask(vsutil.get_y(clip))
     out_clip = core.std.MaskedMerge(clip_band, clip, mask)
@@ -40,8 +39,8 @@ def deband(clip: vapoursynth.VideoNode):
 
 
 def srcs():
-    return shynonon.srcs("raw/Luminous Witches - 01 (Amazon dAnime VBR 1080p).mkv",
-                         "raw/Luminous Witches - 01 (Amazon dAnime CBR 1080p).mkv", comb="lehmer")
+    return shynonon.srcs("raw/Luminous Witches - 02 (Amazon dAnime VBR 1080p).mkv",
+                         "raw/Luminous Witches - 02 (Amazon dAnime CBR 1080p).mkv", comb="lehmer")
 
 
 def denoise(src_clip):
