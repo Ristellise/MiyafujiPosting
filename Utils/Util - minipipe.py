@@ -82,8 +82,8 @@ def run(output, vpy, x264_args):
     """
     An Extremely shitty version of vspipe that outputs to x264.
 
-    :param output:
-    :param vpy:
+    :param output: The .264 file as an output. Note that the file name will always have a .264 file extension at the end.
+    :param vpy: The vapoursynth script. The script should contain only 1 output. mic
     :param x264_args:
     :return:
     """

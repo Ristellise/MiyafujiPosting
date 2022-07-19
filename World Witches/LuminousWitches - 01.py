@@ -80,43 +80,43 @@ def aa(src_clip):
 
 
 src_fmerg = srcs()
-stgfunc.output(src_fmerg)
+# stgfunc.output(src_fmerg)
 # stgfunc.output(src_avg)
 denoised, den_m = denoise(src_fmerg)
 chroma_den = chroma(denoised)
 # stgfunc.output(den_m)
-stgfunc.output(chroma_den)
+# stgfunc.output(chroma_den)
 debanded = deband(chroma_den)
-stgfunc.output(debanded)
+# stgfunc.output(debanded)
 aa_clip = aa(debanded)
 dehalo = jvs_dehalo(aa_clip)
 
 # m = src.std.MaskedMerge(den, l_mask, planes=1)
 # m = kagefunc.hybriddenoise(src, 0.1, 1.5)  #
 
-stgfunc.output(src_fmerg)
+# stgfunc.output(src_fmerg)
 # balanmced = stgfunc.auto_balance(src_avg)
 # stgfunc.output(balanmced)
-stgfunc.output(dehalo)
+# stgfunc.output(dehalo)
 
 out_clip = stgfunc.adaptive_grain(dehalo,
                                   [0.1, 0.06], 0.95, 65, False, 10,
                                   Grainer.AddNoise, temporal_average=2)
 out_clip = vsutil.depth(out_clip, 10)
 
-# src.set_output(0)
-# src.set_output(1)
-# out_clip.set_output(0)
-#
+#src.set_output(0)
+#src.set_output(1)
+out_clip.set_output(0)
+
 # from pathlib import Path
 # import os
 # from lvsfunc.render import find_scene_changes, SceneChangeMode
 # out_path = Path(__file__).resolve()
 # out_path = out_path.with_suffix('.qp')
-#
+# 
 # out_path.parent.mkdir(parents=True, exist_ok=True)
 # #out_clip = run(src=True)[0]
 # if os.path.isfile(out_path) is False:
 #     with open(out_path, 'w') as o:
-#         for f in find_scene_changes(src_b, mode=SceneChangeMode.WWXD_SCXVID_UNION):
+#         for f in find_scene_changes(src_fmerg, mode=SceneChangeMode.WWXD_SCXVID_UNION):
 #             o.write(f"{f} I -1\n")

@@ -5,19 +5,19 @@ import awsmfunc
 import ccd
 import debandshit
 import fvsfunc
-import havsfunc
-import jvsfunc
-import kagefunc
 import lvsfunc
 import stgfunc
 import vapoursynth
 import vardefunc.aa
+import vsmask.edge
 import vsutil
 from lvsfunc.aa import nnedi3
+from stgfunc import Grainer
 from vsutil import get_w
 
 core = vapoursynth.core
-fdog = vardefunc.mask.FDOG()
+
+fdog = vsmask.edge.FDoGTCanny()
 
 a = str(pathlib.Path(
     r"raws/00001.m2ts").resolve())
@@ -45,25 +45,13 @@ def mmsize(clip, width=810, no_mask=False):
     return scaled, descale_mask
 
 
-def jvs_dehalo(in_clip):  # Done initally by Julek. Deals with main haloing.
-    # in_clip = vsutil.depth(in_clip, 16)
-    aa = core.bilateral.Gaussian(in_clip, 1)
-    i_aa = lvsfunc.aa.upscaled_sraa(aa, 1.1)
-    mask = jvsfunc.dehalo_mask(i_aa, expand=1, iterations=0, brz=100)
-    dehalo = havsfunc.FineDehalo(in_clip, rx=2, darkstr=1, brightstr=1)
-    part_a = core.std.MaskedMerge(in_clip, dehalo, mask)
-    return part_a, mask, i_aa
-
-
 src = stgfunc.src(a)
 src = vsutil.depth(src, 16)
 
 # src.set_output(0)
 
 ef = awsmfunc.bbmod(src, 2, 2, 2, 2, blur=20)  # meh, good enough
-# stgfunc.output(ef)
 
-# split into 3
 pred = mmsize(ef[:3693], no_mask=True)
 op = mmsize(ef[3693:3693 + 2157])
 m = mmsize(ef[3693 + 2157:3693 + 2157 + 26039], no_mask=True)
@@ -72,18 +60,22 @@ ed = mmsize(ef[3693 + 2157 + 26039:])
 desc = pred[0] + op[0] + m[0] + ed[0]
 cm = pred[1] + op[1] + m[1] + ed[1]
 stgfunc.output(src)
+
+
 # stgfunc.output(desc)
 
 def compute_pairs(a, b, foff):
     return f"[{a - foff} {b - foff}]"
 
+
 def deband(clip: vapoursynth.VideoNode):
     # todo banding fixes. look at frame 12322 for why.
-    clip_band = debandshit.dumb3kdb(clip, use_neo=True, threshold=40)
-    mask = fdog.get_mask(clip)
+    clip_band = debandshit.dumb3kdb(clip, use_neo=True, threshold=38)
+    mask = fdog.edgemask(clip)
     out_clip = core.std.MaskedMerge(clip_band, clip, mask)
     # clip = clip.text.Text("NoDeBand")
     return out_clip
+
 
 def denoise(r_clip: vapoursynth.VideoNode, credit_mask: vapoursynth.VideoNode, *_):
     pred = r_clip[:3693]
@@ -97,7 +89,7 @@ def denoise(r_clip: vapoursynth.VideoNode, credit_mask: vapoursynth.VideoNode, *
     ed = EoEfunc.denoise.BM3D(ed, sigma=[1.7, 0], CUDA=True)
 
     clip = pred + op + main + ed
-    mask = fdog.get_mask(vsutil.get_y(clip))
+    mask = fdog.edgemask(vsutil.get_y(clip))
     clip_ccd = ccd.ccd(clip)  # Cleans up chroma
     out_clip = core.std.MaskedMerge(clip_ccd, clip, mask)
     credit_mask = credit_mask.resize.Point(format=vapoursynth.GRAY16)
@@ -106,43 +98,20 @@ def denoise(r_clip: vapoursynth.VideoNode, credit_mask: vapoursynth.VideoNode, *
 
 
 den, _ = denoise(desc, cm)
-deb = fvsfunc.ReplaceFrames(den, deband(den), mappings=compute_pairs(15334, 15457, 0))
+deb = deband(den)
 stgfunc.output(deb)
-#dehalo = stgfunc.fine_dehalo(deb)
-#stgfunc.output(dehalo)
-#lum_aa = based_aa(den_lum, eedi3_kwargs=dict(gamma=80))
-#ee = vardefunc.misc.merge_chroma(lum_aa, den)
-# aa = vardefunc.aa.upscaled_sraa(den, singlerater=ee)
-#stgfunc.output(ee)
-# awsmfunc.bbmod(src, 2, 2, 2, 2, blur=20)  # meh, good enough
-# stgfunc.output(src)
-# d_m = lvsfunc.mask.halo_mask(src)
-# lum = vsutil.get_y(src)
-# l_mask = lum.std.Sobel().std.Invert()
-mask = fdog.get_mask(vsutil.get_y(deb)).std.Invert().std.Inflate()
-# den = EoEfunc.denoise.BM3D(src, sigma=[2, 0], CUDA=True)
-#
-# preccd = core.std.MaskedMerge(src, den, mask)
-#
-ccd_mask = fdog.get_mask(vsutil.get_y(deb))
+
+
+
+mask = fdog.edgemask(vsutil.get_y(deb)).std.Invert().std.Inflate()
+
+ccd_mask = fdog.edgemask(vsutil.get_y(deb))
 clip_ccd = ccd.ccd(deb)  # Cleans up chroma
 postccd = core.std.MaskedMerge(clip_ccd, deb, mask)
-# out_clip = postccd
-#
-# halo_mask = havsfunc.FineDehalo(out_clip, rx=0.5, darkstr=0.5, brightstr=0.5, contra=1, showmask=True)
-#
-# weak = lvsfunc.aa.nneedi3_clamp(postccd)
-# sraa = upscaled_sraa(out_clip, rfactor=1.7)
-#
-# out_clip = core.std.MaskedMerge(sraa, out_clip, halo_mask)
-#
-# dehalo, mask, i_aa = jvs_dehalo(out_clip)
-#
-# # m = src.std.MaskedMerge(den, l_mask, planes=1)
-# # m = kagefunc.hybriddenoise(src, 0.1, 1.5)  #
-# # stgfunc.output(src)
-#
-out_clip = kagefunc.adaptive_grain(postccd, strength=0.3)
+
+out_clip = stgfunc.adaptive_grain(postccd,
+                                  [0.2, 0.06], 0.95, 65, False, 10,
+                                  Grainer.AddNoise, temporal_average=2)
 # out_clip = vsutil.depth(out_clip, 10)
 stgfunc.output(out_clip)
 # src.set_output(0)

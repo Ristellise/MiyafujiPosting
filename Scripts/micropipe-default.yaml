@@ -1,0 +1,88 @@
+x264:
+  # --demuxer: demuxer to demux the input from your script. Should always be y4m.
+  - --demuxer: y4m
+  - --crf: 15
+  # --crf: Constant Rate Factor for the quality.
+  # Ristellise (me) usually goes with 15 since it just works.
+  # Though there are varying opinions on this with some going as high as 18.
+
+  - --preset: veryslow
+  # Sets a bunch of other quality settings such as rc-lookahead, ref, partitions and others.
+  # There is a list of changes that x264 does for presets: http://dev.beandog.org/x264_preset_reference.html
+
+  - --output: '{output}'
+  # The output file. This is a formatted string with "output" being a pathlib.Path being provided.
+
+  - --output-depth: "10"
+  # Sets the output depth of the video.
+  # If it does not watch with the input y4m, the depth will be reduced/increased to match.
+
+  - --fps: "_auto"
+  # The output fps. if the string is "_auto" or the value is empty, it will use the fps of the input clip.
+
+  - --range: "tv"
+  # Sets the color range of the video, can be either: auto, tv or pc.
+
+  - --colormatrix: "bt709"
+  # Specifies the color matrix for the output video.
+
+  - --colorprim: "bt709"
+  # Specifies the color primary for the output video.
+
+  - --transfer: "bt709"
+  # Specifies the transfer for the output video when reading from y4m to the final encode.
+
+  - --deblock: "-2:-2"
+  # Specifies the "Deblocking Strength:Deblocking threshold", also refered to as alpha and beta deblocking respectively.
+  # Alpha deblocking affects over overal amount of deblocking to be applied to the picture.
+  # higher=softer with less detail, lower=sharper, more details.
+  # Beta Deblocking determines whether something in a block is a detail or not when deblocking is applied to it.
+  # lower=apply less deblocking to more flat blocks with details
+  # higher=apply more aggressive filtering to blocks that aren't very flat.
+
+  # -2:-2 is taken from setsugen's boruto settings. Seems to work well.
+
+  - --min-keyint: "23"
+  - --keyint: "240"
+  # Sets the minimum Key-Frame/Intera-frame as well as maximum interval between each I frame (--keyint)
+
+  - --ref: "16"
+  # Sets the maximum number of reference frames that can be used for B-Frames.
+
+  - --bframes: "16"
+  # Sets the number of consecutive B-frames.
+  # Typically, adaptive b-frame is on. So this functions as the maximum number of B-Frames.
+
+  - --aq-mode: "3"
+  # Adaptive Quantization to better distribute bits between macroblocks:
+  # 0: Don't use AQ at all.
+  # 1: Redistribute bits within each frame
+  # 2: Redistribute bits across the whole video
+  # 3: auto-variance with dark scee bias.
+
+  - --aq-strength: 0.95
+  # Bias for low detail/flat macroblcks.
+
+  - --qcomp: "0.72"
+  # Quantizer curve compression factor. 0.0 is Constant Bitrate while 1.0 is Constant Quantizer.
+
+  - --psy-rd: "0.90:0.0"
+  # Psy-RD: Psychovisually optimized rate-distortion
+  # Psy-RD measures the deviation from the source material and the bit cost for each possible decision outcome.
+  # First value is Strength while the second value is for psy-trellis. For animation, disable psy-trellis.
+
+  - --me: "tesa"
+  # sets the motion estimation method. can be:
+  # dia, hex, umh, esa, tesa.
+
+  - --merange: "32"
+  # Sets the max range of the motion search. Values can be between 4 to 16.
+
+  - --direct: "spatial"
+  # Set prediction mode for 'direct' motion vectors.
+
+  - --no-dct-decimate: _
+  # Disables coefficient thresholding on P frames
+  - --no-fast-pskip: _
+  # Disables early skip detection on P-frames.
+  - --qpfile: '{vpy}'
