@@ -43,14 +43,18 @@ def root():
 @click.option("-yaml_config",
               type=click.Path(exists=True),
               default=pathlib.Path(__file__).parent.joinpath("micropipe-default.yaml"))
+@click.option("executable", default="x264")
 @click.argument("vpy", type=click.Path(exists=True, dir_okay=False))
 @click.argument("output", type=click.Path(writable=True, resolve_path=True, dir_okay=False))
-def run(output, vpy, yaml_config):
+def run(yaml_config, executable, vpy, output):
     """
-    An portable vspipe that outputs to x264.
 
-    :param output: The .264 file as an output. Note that the file name will always have a .264 file extension at the end.
-    :param vpy: The vapoursynth script. The script should contain only 1 output. micropipe will prompt if the script does not provide a single output
+    Micropipe: An alternative vspipe replacement.
+
+    :param yaml_config: The YAML config for inputting
+    :param executable:
+    :param output: The file as an output.
+    :param vpy: The vapoursynth script. The script should contain only 1 output. Micropipe will prompt if the script does not provide a single output.
     :return:
     """
     output = pathlib.Path(output)
@@ -104,20 +108,9 @@ def run(output, vpy, yaml_config):
             print(f"[INF]: Setting framerate to: {fps}")
             pipe_config['x264']['--fps'] = fps
 
-        args = " ".join([f"{k}" if v == "_" else f"{k} \"{str(v).format(output=output.with_suffix('.264'), vpy=vpy.with_suffix('.qp'))}\""
+        args = " ".join([f"{k}" if v == "_" else f"{k} \"{str(v).format(output=output, vpy=vpy.with_suffix('.qp'))}\""
                          for k, v in pipe_config['x264'].items()] + [f'--frames {clip.clip.num_frames}','-'])
         str_args = " ".join(['x264', args])
-
-        # args = ["--demuxer", "y4m",
-        #         "--preset veryslow ",
-        #         f"-o \"{output.with_suffix('.264')}\" - ",
-        #         "--fps 24000/1001 --range tv --colormatrix bt709 --colorprim bt709 --transfer bt709 ",
-        #         "--preset veryslow --crf 15 --deblock -2:-2 --min-keyint 23 --keyint 240",
-        #         "--ref 16 --bframes 16",
-        #         "--aq-mode 3 --aq-strength 0.95 --qcomp 0.72 --psy-rd 0.90:0.0 --me tesa --merange 32 ",
-        #         "--direct spatial --no-dct-decimate --no-fast-pskip",
-        #         f"--output-depth 10 --qpfile \"{vpy.with_suffix('.qp')}\""]
-        # print(" ".join(['x264', *args]))
         print(str_args)
         with subprocess.Popen(str_args,
                               stdin=subprocess.PIPE) as process:

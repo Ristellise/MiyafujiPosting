@@ -1,13 +1,12 @@
 import EoEfunc
-import jvsfunc
 import lvsfunc
 import stgfunc
 import vapoursynth
 import vardefunc
 import vsdehalo
 import vsmask
-from vapoursynth import core
 import vsutil
+from vapoursynth import core
 from vsutil import get_w
 
 import shynonon
@@ -88,8 +87,9 @@ def mmsize(clip, width=540, no_mask=False):
     return scaled, descale_mask
 
 
-allthevillagerssharethesameloveforfucking,_ = mmsize(beautifulvillagesituatedontheaustrianalps,no_mask=True)
+allthevillagerssharethesameloveforfucking, _ = mmsize(beautifulvillagesituatedontheaustrianalps, no_mask=True)
 
-stgfunc.output(beautifulvillagesituatedontheaustrianalps)
+# stgfunc.output(beautifulvillagesituatedontheaustrianalps)
 stgfunc.output(allthevillagerssharethesameloveforfucking)
+#stgfunc.output(noisy)
 # stgfunc.output(beautifulvillagesituatedontheaustrianalps)
