@@ -35,9 +35,11 @@ def add_to_path(p):
         sys.path = old_path
         sys.modules = old_modules
 
+
 @click.group()
 def root():
     pass
+
 
 @root.command()
 @click.option("-yaml_config",
@@ -51,8 +53,8 @@ def run(yaml_config, executable, vpy, output):
 
     Micropipe: An alternative vspipe replacement.
 
-    :param yaml_config: The YAML config for inputting
-    :param executable:
+    :param yaml_config: The YAML config for input. the
+    :param executable: The executable to invoke.
     :param output: The file as an output.
     :param vpy: The vapoursynth script. The script should contain only 1 output. Micropipe will prompt if the script does not provide a single output.
     :return:
@@ -97,21 +99,38 @@ def run(yaml_config, executable, vpy, output):
             raise Exception("[ERR]: QP file missing!")
         print("[INF]: Prepare Clip")
         clip = vapoursynth.get_output(outs[0])
-        #print(pipe_config)
+        if not isinstance(clip, vapoursynth.VideoOutputTuple):
+            raise NotImplementedError("Audio output not implemented!")
         fps = f"{clip.clip.fps.numerator}/{clip.clip.fps.denominator}"
-        x264 = {}
-        for cfg in pipe_config['x264']:
-            x264[list(cfg.keys())[0]] = list(cfg.values())[0]
-        pipe_config['x264'] = x264
-        print(pipe_config)
-        if pipe_config['x264'].get('--fps', "_auto") == "_auto":
-            print(f"[INF]: Setting framerate to: {fps}")
-            pipe_config['x264']['--fps'] = fps
 
-        args = " ".join([f"{k}" if v == "_" else f"{k} \"{str(v).format(output=output, vpy=vpy.with_suffix('.qp'))}\""
-                         for k, v in pipe_config['x264'].items()] + [f'--frames {clip.clip.num_frames}','-'])
-        str_args = " ".join(['x264', args])
-        print(str_args)
+        exec_config = pipe_config.get(executable)
+        if not exec_config:
+            print(f"[ERR]: Cannot find: {executable} Configuration in the yml file.")
+        exec_confg_parsed = {}
+        for cfg in exec_config['x264']:
+            exec_confg_parsed[list(cfg.keys())[0]] = list(cfg.values())[0]
+
+        mapping = {
+            "_output": str(output),
+            "_fps": str(fps),
+            "_qp": str(vpy.with_suffix('.qp')),
+            "_frames": str(clip.clip.num_frames),
+            "_input": "-"
+        }
+        has_input = False
+        mapping_key = list(mapping.keys())
+        for k,v in exec_confg_parsed.items():
+            if v in mapping_key:
+                print(f"[INF]: Setting {v} of {k} to: {mapping[v]}")
+                exec_confg_parsed[k] = mapping[v]
+                if v == "_input":
+                    has_input = True
+
+        list_args = [f"{k}" if v == "_" else f"{k} \"{str(v).format(output=output, vpy=vpy.with_suffix('.qp'))}\""
+                         for k, v in exec_confg_parsed.items()] + ['-'] if not has_input else []
+        str_args = " ".join([executable, " ".join(list_args)])
+        print(f"Subprocess Arguments\n==================\n{str_args}\n====================================")
+        print(f"Starting Encode. Please have patience...")
         with subprocess.Popen(str_args,
                               stdin=subprocess.PIPE) as process:
             if isinstance(clip, vapoursynth.VideoOutputTuple):
@@ -146,12 +165,13 @@ def qpfile(vpy, qpfile):
             raise Exception("Found more than 1 inputs, prepare your script with 1 output only.")
         elif len(outs) == 0:
             raise Exception("No outputs found.")
-        
+
         from lvsfunc.render import find_scene_changes, SceneChangeMode
-        #out_clip = run(src=True)[0]
+        # out_clip = run(src=True)[0]
         if os.path.isfile(qpfile) is False:
             with open(qpfile, 'w') as o:
-                for f in find_scene_changes(vapoursynth.get_output(outs[0]).clip, mode=SceneChangeMode.WWXD_SCXVID_UNION):
+                for f in find_scene_changes(vapoursynth.get_output(outs[0]).clip,
+                                            mode=SceneChangeMode.WWXD_SCXVID_UNION):
                     o.write(f"{f} I -1\n")
 
 

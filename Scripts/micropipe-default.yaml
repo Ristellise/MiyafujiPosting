@@ -17,7 +17,7 @@ x264:
   # Sets the output depth of the video.
   # If it does not watch with the input y4m, the depth will be reduced/increased to match.
 
-  - --fps: "_auto"
+  - --fps: "_fps"
   # The output fps. if the string is "_auto" or the value is empty, it will use the fps of the input clip.
 
   - --range: "tv"
@@ -85,4 +85,7 @@ x264:
   # Disables coefficient thresholding on P frames
   - --no-fast-pskip: _
   # Disables early skip detection on P-frames.
-  - --qpfile: '{vpy}'
+  - --qpfile: '_qp'
+  # qp file
+  - --frames: '_frames'
+  # Total frame count
