@@ -40,8 +40,8 @@ def deband(clip: vapoursynth.VideoNode):
 
 
 def srcs():
-    return shynonon.srcs("raw/Luminous Witches - 01 (Amazon dAnime VBR 1080p).mkv",
-                         "raw/Luminous Witches - 01 (Amazon dAnime CBR 1080p).mkv", comb="lehmer")
+    return shynonon.srcs("raw/Luminous Witches/Luminous Witches - 01 (Amazon dAnime VBR 1080p).mkv",
+                         "raw/Luminous Witches/Luminous Witches - 01 (Amazon dAnime CBR 1080p).mkv", comb="lehmer")
 
 
 def denoise(src_clip):

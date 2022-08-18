@@ -43,7 +43,7 @@ def root():
 @click.option("-yaml_config",
               type=click.Path(exists=True),
               default=pathlib.Path(__file__).parent.joinpath("micropipe-default.yaml"))
-@click.option("executable", default="x264")
+@click.option("--executable", default="x264")
 @click.argument("vpy", type=click.Path(exists=True, dir_okay=False))
 @click.argument("output", type=click.Path(writable=True, resolve_path=True, dir_okay=False))
 def run(yaml_config, executable, vpy, output):

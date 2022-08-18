@@ -15,16 +15,17 @@ def srcs(*src_input, depth=16, comb="avg", colorspace=None):
         elif len(src_input) > 2:
             output = core.average.Mean(*srcs)
         else:
-            output = srcs[0]
+            output = srcs
     elif comb == "lehmer":
         if len(src_input) == 2:
             output = vsrgtools.lehmer_diff_merge(srcs[0], srcs[1])
         elif len(src_input) > 2:
             raise Exception("lehmer merge does not support 2+ srcs!")
         else:
-            output = srcs[0]
+            output = srcs
     else:
         raise Exception(f"Unrecognized combing method: {comb}")
+
     if colorspace is not None:
         output = output.fmtc.resample(css=colorspace)
     return output

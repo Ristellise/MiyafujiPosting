@@ -11,6 +11,7 @@ import vsmask.edge
 import vsutil
 from stgfunc import Grainer
 import shynonon
+
 core = vapoursynth.core
 witty = vsmask.edge.FDoGTCanny()
 fdog = vardefunc.mask.FDOG()
@@ -37,8 +38,8 @@ def deband(clip: vapoursynth.VideoNode):
 
 
 def srcs():
-    return shynonon.srcs("raw/Luminous Witches/Luminous Witches - 02 (Amazon dAnime VBR 1080p).mkv",
-                         "raw/Luminous Witches/Luminous Witches - 02 (Amazon dAnime CBR 1080p).mkv", comb="lehmer")
+    return shynonon.srcs("raw/Luminous Witches/Luminous Witches - 05 (Amazon dAnime VBR 1080p).mkv",
+                         "raw/Luminous Witches/Luminous Witches - 05 (Amazon dAnime CBR 1080p).mkv", comb="lehmer")
 
 
 def denoise(src_clip):
@@ -46,7 +47,7 @@ def denoise(src_clip):
     sc = shynonon.scale
     mask_2 = witty.edgemask(vsutil.get_y(src_clip), lthr=sc(src_clip, .8),
                             hthr=sc(src_clip, .9)).std.Deflate().std.Deflate().std.Deflate().std.Deflate().std.Invert()
-
+    # stgfunc.output(mask_2)
     den = EoEfunc.denoise.BM3D(src_clip, sigma=[3.5, 0], CUDA=True)
     src_den = core.std.MaskedMerge(src_clip, den, mask_2)
     return src_den, mask_2
@@ -77,33 +78,54 @@ def aa(src_clip):
 
 
 src_fmerg = srcs()
-# stgfunc.output(src_fmerg)
+
+#print(vsutil.get_y(src_fmerg).format)
+
+# Slicing to only process the shit frames when shits hits the fan.
+
+pre = src_fmerg[:27412]
+curses = lvsfunc.deblock.vsdpir(src_fmerg[27412:27492], 50)
+curses = ccd.ccd(curses, threshold=20)  # Cleans up chroma
+post = src_fmerg[27492:]
+
+# stfunc.output(src_fmerg)
+
+
+deblk = pre + curses + post
+
+# stgfunc.output(deblk)
+
+deblk = core.std.Merge(clipa=src_fmerg, clipb=deblk, weight=[1, 0])
+
+#stgfunc.output(src_fmerg)
+#stgfunc.output(deblk)
 # stgfunc.output(src_avg)
-denoised, den_m = denoise(src_fmerg)
+denoised, den_m = denoise(deblk)
 chroma_den = chroma(denoised)
 # stgfunc.output(den_m)
-#stgfunc.output(chroma_den)
+# stgfunc.output(chroma_den)
 debanded = deband(chroma_den)
-#stgfunc.output(debanded)
+# stgfunc.output(debanded)
 aa_clip = aa(debanded)
 dehalo = jvs_dehalo(aa_clip)
 
 # m = src.std.MaskedMerge(den, l_mask, planes=1)
 # m = kagefunc.hybriddenoise(src, 0.1, 1.5)  #
 
-#stgfunc.output(src_fmerg)
+# stgfunc.output(src_fmerg)
 # balanmced = stgfunc.auto_balance(src_avg)
 # stgfunc.output(balanmced)
-#stgfunc.output(dehalo)
+# stgfunc.output(dehalo)
 
 out_clip = stgfunc.adaptive_grain(dehalo,
                                   [0.2, 0.06], 0.95, 65, False, 10,
                                   Grainer.AddNoise, temporal_average=2)
 out_clip = vsutil.depth(out_clip, 10)
 
-src_fmerg.set_output(0)
+# src_fmerg.set_output(0)
 # src.set_output(1)
-#out_clip.set_output(0)
+# stgfunc.output(out_clip)
+out_clip.set_output(0)
 #
 # from pathlib import Path
 # import os

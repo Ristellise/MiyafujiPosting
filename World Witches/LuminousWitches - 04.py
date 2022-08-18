@@ -37,8 +37,8 @@ def deband(clip: vapoursynth.VideoNode):
 
 
 def srcs():
-    return shynonon.srcs("raw/Luminous Witches/Luminous Witches - 02 (Amazon dAnime VBR 1080p).mkv",
-                         "raw/Luminous Witches/Luminous Witches - 02 (Amazon dAnime CBR 1080p).mkv", comb="lehmer")
+    return shynonon.srcs("raw/Luminous Witches/Luminous Witches - 04 (Amazon dAnime VBR 1080p).mkv",
+                         "raw/Luminous Witches/Luminous Witches - 04 (Amazon dAnime CBR 1080p).mkv", comb="lehmer")
 
 
 def denoise(src_clip):
@@ -101,9 +101,9 @@ out_clip = stgfunc.adaptive_grain(dehalo,
                                   Grainer.AddNoise, temporal_average=2)
 out_clip = vsutil.depth(out_clip, 10)
 
-src_fmerg.set_output(0)
+#src_fmerg.set_output(0)
 # src.set_output(1)
-#out_clip.set_output(0)
+out_clip.set_output(0)
 #
 # from pathlib import Path
 # import os

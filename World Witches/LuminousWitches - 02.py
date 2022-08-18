@@ -20,8 +20,8 @@ core = vapoursynth.core
 witty = vsmask.edge.FDoGTCanny()
 fdog = vardefunc.mask.FDOG()
 
-a = str(pathlib.Path("raw/Luminous Witches - 02 (Amazon dAnime CBR 1080p).mkv").resolve())
-b = str(pathlib.Path("raw/Luminous Witches - 02 (Amazon dAnime VBR 1080p).mkv").resolve())
+a = str(pathlib.Path("raw/Luminous Witches/Luminous Witches - 02 (Amazon dAnime CBR 1080p).mkv").resolve())
+b = str(pathlib.Path("raw/Luminous Witches/Luminous Witches - 02 (Amazon dAnime VBR 1080p).mkv").resolve())
 
 
 def jvs_dehalo(in_clip):  # Done initally by Julek. Deals with main haloing.

@@ -14,3 +14,4 @@ vs-preview
 /Junk/WitchFunc/__pycache__/*.pyc
 /Utils/*.pth
 /Junk/.vspreview
+*/.vspreview/

@@ -24,7 +24,7 @@ def detelecine(clip: vapoursynth.VideoNode, decimate=True, inverse=True,
     return clip
 
 
-src_clip = lvsfunc.misc.source("raw/Witch NCOP.m2ts", )
+src_clip = lvsfunc.misc.source("raw/Strike Witches/Witch NCOP.m2ts", )
 # src_clip = src_clip.resize.Point(matrix_in_s='709', matrix_s='170m').std.SetFrameProp(prop="_Matrix", intval=1)
 ivtc_clip = detelecine(src_clip)
 ivtc_clip = ivtc_clip[132:]  # remove inital card
