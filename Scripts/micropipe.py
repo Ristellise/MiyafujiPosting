@@ -1,13 +1,12 @@
 import contextlib
-import importlib.util
 import os
 import pathlib
 import subprocess
-import yaml
 import sys
 
 import click
 import vapoursynth
+import yaml
 
 
 @contextlib.contextmanager
@@ -45,8 +44,8 @@ def root():
 @click.option("-yaml_config",
               type=click.Path(exists=True),
               default=pathlib.Path(__file__).parent.joinpath("micropipe-default.yaml"))
-@click.option("--executable", default="x264")
 @click.argument("vpy", type=click.Path(exists=True, dir_okay=False))
+@click.option("--executable", default="x264")
 @click.argument("output", type=click.Path(writable=True, resolve_path=True, dir_okay=False))
 def run(yaml_config, executable, vpy, output):
     """
@@ -65,11 +64,16 @@ def run(yaml_config, executable, vpy, output):
     if output.is_dir():
         raise Exception("Output is a directory, specify an actual file location.")
     output = output.resolve()
+    if isinstance(yaml_config,str):
+        yaml_config = pathlib.Path(yaml_config)
     cfg = yaml_config.resolve()
     print("[INF]: Load pipe config...")
     if cfg.exists():
         with open(cfg, "r", encoding="utf-8") as f:
             pipe_config = yaml.safe_load(f)
+    else:
+        print(f"Failed to find: {cfg}")
+        return -1
     print(f"[INF]: Pipe config loaded from: {str(cfg.resolve())}")
     print(vpy.resolve().parent)
     with working_directory(vpy.resolve().parent):
@@ -107,7 +111,7 @@ def run(yaml_config, executable, vpy, output):
         if not exec_config:
             print(f"[ERR]: Cannot find: {executable} Configuration in the yml file.")
         exec_confg_parsed = {}
-        for cfg in exec_config['x264']:
+        for cfg in exec_config:
             exec_confg_parsed[list(cfg.keys())[0]] = list(cfg.values())[0]
 
         mapping = {
@@ -119,7 +123,7 @@ def run(yaml_config, executable, vpy, output):
         }
         has_input = False
         mapping_key = list(mapping.keys())
-        for k,v in exec_confg_parsed.items():
+        for k, v in exec_confg_parsed.items():
             if v in mapping_key:
                 print(f"[INF]: Setting {v} of {k} to: {mapping[v]}")
                 exec_confg_parsed[k] = mapping[v]
@@ -127,7 +131,7 @@ def run(yaml_config, executable, vpy, output):
                     has_input = True
 
         list_args = [f"{k}" if v == "_" else f"{k} \"{str(v).format(output=output, vpy=vpy.with_suffix('.qp'))}\""
-                         for k, v in exec_confg_parsed.items()] + ['-'] if not has_input else []
+                     for k, v in exec_confg_parsed.items()] + ['-'] if not has_input else []
         str_args = " ".join([executable, " ".join(list_args)])
         print(f"Subprocess Arguments\n==================\n{str_args}\n====================================")
         print(f"Starting Encode. Please have patience...")

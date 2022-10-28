@@ -7,8 +7,6 @@ import stgfunc
 import vapoursynth
 from vapoursynth import core
 
-from vsmlrt import Waifu2xModel, Backend, Waifu2x
-
 
 def srcs(*src_input, depth=16, comb="avg", colorspace=None):
     inputs_path = [str(pathlib.Path(inputs).resolve(strict=True)) for inputs in src_input]
@@ -32,13 +30,6 @@ def srcs(*src_input, depth=16, comb="avg", colorspace=None):
     if colorspace is not None:
         output = output.fmtc.resample(css=colorspace)
     return output
-
-
-def waifu2x(in_clip, noise=-1,scale=2):
-    in_clip = in_clip.fmtc.resample(css="444")
-    in_clip = in_clip.fmtc.matrix(mat="601", col_fam=vapoursynth.RGB)
-    in_clip = in_clip.fmtc.bitdepth(bits=32)
-    return in_clip.w2xnvk.Waifu2x(noise=noise, scale=scale, model=2)
 
 
 def scale(clip: vapoursynth.VideoFrame, percent=0.5):

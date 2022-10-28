@@ -9,9 +9,19 @@ vs-preview
 /World Witches/raw
 /World Witches/.vspreview
 /World Witches/__pycache__
-/World Witches/*.qp
+*.qp
 /.idea
-/Junk/WitchFunc/__pycache__/*.pyc
-/Utils/*.pth
+*.pth
+*.glsl
 /Junk/.vspreview
 */.vspreview/
+
+*.pyc
+*.ffindex
+*raws/*
+*raw/*
+/raw/*
+/raws/*
+*/raw
+*/output
+*/results

@@ -13,6 +13,9 @@ x264:
   - --output: '{output}'
   # The output file. This is a formatted string with "output" being a pathlib.Path being provided.
 
+  - --output-csp: "i444"
+  # Sets the output Colorspace of the video, yuv444 afaik.
+
   - --output-depth: "10"
   # Sets the output depth of the video.
   # If it does not watch with the input y4m, the depth will be reduced/increased to match.

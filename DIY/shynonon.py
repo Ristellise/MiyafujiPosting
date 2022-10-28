@@ -1,13 +1,9 @@
-import typing
-
-import vsrgtools
 import pathlib
 
 import stgfunc
 import vapoursynth
+import vsrgtools
 from vapoursynth import core
-
-from vsmlrt import Waifu2xModel, Backend, Waifu2x
 
 
 def srcs(*src_input, depth=16, comb="avg", colorspace=None):
@@ -34,7 +30,7 @@ def srcs(*src_input, depth=16, comb="avg", colorspace=None):
     return output
 
 
-def waifu2x(in_clip, noise=-1,scale=2):
+def waifu2x(in_clip, noise=-1, scale=2):
     in_clip = in_clip.fmtc.resample(css="444")
     in_clip = in_clip.fmtc.matrix(mat="601", col_fam=vapoursynth.RGB)
     in_clip = in_clip.fmtc.bitdepth(bits=32)

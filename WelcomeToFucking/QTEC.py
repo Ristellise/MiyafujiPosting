@@ -3,6 +3,7 @@ import stgfunc
 import vapoursynth
 import vardefunc
 import vsdehalo
+import vskernels
 import vsmask.edge
 import vsutil
 from vsutil import get_w
@@ -13,7 +14,7 @@ def RGBtoYUV420(clip):
     return clip
 
 
-qtec = RGBtoYUV420(stgfunc.src("tests/screenshot03.png", 16))
+qtec = RGBtoYUV420(stgfunc.src("tests/screenshot056.png", 16))
 
 
 def scale(clip: vapoursynth.VideoFrame, percent=0.5):
@@ -31,7 +32,7 @@ def thefucking(clip, width=480):
     print(clip.format.color_family)
     if clip.format.color_family != vapoursynth.ColorFamily.YUV:
         raise Exception("Not YUV.")
-    desc = lvsfunc.kernels.BicubicDidee()  # Wait, this works??
+    desc = vskernels.BicubicDidee()  # Wait, this works??
     base_scale = desc.descale(clip, get_w(width), width)
     lum = vsutil.get_y(base_scale)
     lum_prescale = vsutil.get_y(clip)
@@ -42,8 +43,8 @@ def thefucking(clip, width=480):
     msk = sober.edgemask(lum, scale(sraa2))
     dehalo = vapoursynth.core.std.MaskedMerge(lum, dehalo, msk)
 
-    rescale = lvsfunc.kernels.Bicubic(b=-1 / 2, c=1 / 4).scale(vardefunc.scale.nnedi3_upscale(dehalo, pscrn=1),
-                                                               clip.width, clip.height)
+    rescale = vskernels.Bicubic(b=-1 / 2, c=1 / 4).scale(vardefunc.scale.nnedi3_upscale(dehalo, pscrn=1),
+                                                         clip.width, clip.height)
 
     # lum_prescale_msk = sober.edgemask(lum_prescale, scale(lum_prescale, 0.2), scale(lum_prescale, 0.4)).std.Inflate().std.Inflate().std.Inflate()
     # stgfunc.output(lum_prescale_msk)

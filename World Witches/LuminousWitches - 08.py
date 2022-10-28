@@ -29,16 +29,34 @@ def jvs_dehalo(in_clip):  # Done initally by Julek. Deals with main haloing.
     return part_a
 
 
+debanding = [
+    (25326, 26015, 1),
+    (26717, 27109, 1),
+]
+
+
 def deband(clip: vapoursynth.VideoNode):
-    clip_band = debandshit.dumb3kdb(clip, use_neo=True, threshold=30)
+    mod_clips = [(clip[i[0]:i[1]+1], i[0], i[2]) for i in debanding]
+
+    base_line = debandshit.dumb3kdb(clip, use_neo=True, threshold=38)
     mask = witty.edgemask(vsutil.get_y(clip))
-    out_clip = core.std.MaskedMerge(clip_band, clip, mask)
+    #stgfunc.output(mask)
+    deb_clip = core.std.MaskedMerge(base_line, clip, mask)
+
+    for i in mod_clips:
+        if i[2] == 1:
+            mod_band = debandshit.dumb3kdb(i[0], use_neo=True, threshold=58, radius=19)
+            mask = witty.edgemask(vsutil.get_y(i[0]))
+            #stgfunc.output(mask)
+            deb_clip = vsutil.insert_clip(deb_clip, core.std.MaskedMerge(mod_band,i[0], mask), i[1])
+    #
     # clip = clip.text.Text("NoDeBand")
-    return out_clip
+    return deb_clip
 
 
 def srcs():
-    return shynonon.srcs("raw/Luminous Witches/Luminous Witches - 06.5 (B-Global 1080p).mkv", comb="lehmer")
+    return shynonon.srcs("raw/Luminous Witches/Luminous Witches - 08 (Amazon dAnime CBR 1080p).mkv",
+                         "raw/Luminous Witches/Luminous Witches - 08 (Amazon dAnime VBR 1080p).mkv", comb="lehmer")
 
 
 def denoise(src_clip):
@@ -47,14 +65,14 @@ def denoise(src_clip):
     mask_2 = witty.edgemask(vsutil.get_y(src_clip), lthr=sc(src_clip, .8),
                             hthr=sc(src_clip, .9)).std.Deflate().std.Deflate().std.Deflate().std.Deflate().std.Invert()
 
-    den = EoEfunc.denoise.BM3D(src_clip, sigma=[4, 0], CUDA=True)
+    den = EoEfunc.denoise.BM3D(src_clip, sigma=[3.5, 0], CUDA=True)
     src_den = core.std.MaskedMerge(src_clip, den, mask_2)
     return src_den, mask_2
 
 
 def chroma(src_den):
     ccd_mask = witty.edgemask(vsutil.get_y(src_den))
-    clip_ccd = ccd.ccd(src_den, threshold=20)  # Cleans up chroma
+    clip_ccd = ccd.ccd(src_den, threshold=10)  # Cleans up chroma
     postccd = core.std.MaskedMerge(clip_ccd, src_den, ccd_mask)
     return postccd
 
@@ -81,10 +99,9 @@ src_fmerg = srcs()
 # stgfunc.output(src_avg)
 denoised, den_m = denoise(src_fmerg)
 chroma_den = chroma(denoised)
-# stgfunc.output(den_m)
-# stgfunc.output(chroma_den)
+
 debanded = deband(chroma_den)
-# stgfunc.output(debanded)
+
 aa_clip = aa(debanded)
 dehalo = jvs_dehalo(aa_clip)
 
@@ -94,7 +111,7 @@ dehalo = jvs_dehalo(aa_clip)
 # stgfunc.output(src_fmerg)
 # balanmced = stgfunc.auto_balance(src_avg)
 # stgfunc.output(balanmced)
-# stgfunc.output(dehalo)
+
 
 out_clip = stgfunc.adaptive_grain(dehalo,
                                   [0.2, 0.06], 0.95, 65, False, 10,
@@ -102,36 +119,13 @@ out_clip = stgfunc.adaptive_grain(dehalo,
 out_clip = vsutil.depth(out_clip, 10)
 
 ## Tests
-# stgfunc.output(src_fmerg)
-
-# If it weren't for muse, I would not have done cursed shit like this lol.
-
-from LuminousWitches06NoOut import out_clip as out06
-
-notfunnydidntlaugh = stgfunc.src("raw/Luminous Witches/FuckMuse.png")
-tex = notfunnydidntlaugh.fmtc.matrix(mat="601", col_fam=vapoursynth.YUV, bits=16).fmtc.resample(css="420").fmtc.bitdepth(bits=10)
-op06 = out06[1176:3332]
-# stgfunc.output(pre06)
-eff = 80
-post = out06[28500 + eff:28500 + 81 + eff]
-
-postm = core.std.MaskedMerge(post, tex, vsutil.get_y(tex), premultiplied=1)
-tpost = post[:14] + postm[14:]
-op06 = op06 + op06[-1] + op06[-1]
-# print(len(op06))
-# stgfunc.output(out05)
-# 35536
-#stgfunc.output(tpost)
-
-true_out = op06 + out_clip[2158:35522] + tpost
-#stgfunc.output(vsutil.get_y(tex))
-#stgfunc.output(true_out)
-#srcs().set_output(0)
-true_out.set_output(0)
+#stgfunc.output(src_fmerg)
+# stgfunc.output(den_m)
+# stgfunc.output(out_clip)
 
 # Output
-# stgfunc.src(srcs())
-# out_clip.set_output(0)
+# stgfunc.src("raw/Luminous Witches/Luminous Witches - 08 (Amazon dAnime CBR 1080p).mkv", 16).set_output(0)
+out_clip.set_output(0)
 #
 # from pathlib import Path
 # import os
